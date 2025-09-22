@@ -1,0 +1,45 @@
+# 工作流名称
+name: Build/release Windows App
+
+# 触发条件
+on:
+  # 允许你从 GitHub Actions 页面手动触发此工作流
+  workflow_dispatch:
+    inputs:
+      create_release:
+        description: '是否创建 GitHub Release？（需要先在本地打好 tag 并推送到远程）'
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  release:
+    # 只在 Windows 最新版本上运行
+    runs-on: windows-latest
+
+    steps:
+      # 第一步：检出代码
+      - name: Check out Git repository
+        # 建议使用 v4 版本
+        uses: actions/checkout@v4
+        with:
+          # 包含子模块
+          submodules: true
+
+      # 第二步：安装 Node.js 环境
+      - name: Install Node.js, NPM and Yarn
+        # 建议使用 v4 版本
+        uses: actions/setup-node@v4
+        with:
+          node-version: 16
+
+      # 第三步：构建和发布 Electron 应用
+      - name: Build/release Electron app
+        uses: samuelmeuli/action-electron-builder@v1
+        with:
+          # GitHub Token，由 GitHub Actions 自动提供
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+          # 根据手动触发时选择的输入参数来决定是否发布
+          # 如果在上一步选择了 "true"，就会创建 Release
+          release: ${{ github.event.inputs.create_release }}
